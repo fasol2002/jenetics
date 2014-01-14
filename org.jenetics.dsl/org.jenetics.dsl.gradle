@@ -28,12 +28,31 @@ import org.apache.tools.ant.filters.ReplaceTokens
  */
 
 apply plugin: 'packaging'
- 
+
+sourceSets {
+    generated
+}
+
+configurations {
+    antlr
+}
+
 dependencies {
-	compile Include.JScience
-	
-	testCompile Include.Apache.Commons.Math
-	testCompile Include.TestNG
+    compile project(':org.jenetics')
+	compile Include.ANTLR.Runtime
+
+    antlr Include.ANTLR.Compiler
+}
+
+task compileANTLR(type: Exec) {
+    workingDir = 'src/main/antlr'
+
+    commandLine = [
+        'java', '-cp',  configurations.antlr.getAsPath(), 'org.antlr.v4.Tool',
+            '-o', '../../generated/java',
+            '-package', 'org.jenetics.dsl',
+            'org/jenetics/dsl/Hello.g4'
+    ]
 }
 
 jar.manifest.instruction('Export-Package',
