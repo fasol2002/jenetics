@@ -29,9 +29,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 apply plugin: 'packaging'
 
-sourceSets {
-    generated
-}
+sourceSets.main.java.srcDir "src/generated/java"
 
 configurations {
     antlr
