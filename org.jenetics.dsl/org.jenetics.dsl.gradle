@@ -18,23 +18,31 @@
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
 
+import org.apache.tools.ant.filters.ReplaceTokens
+
+
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @since 1.2
+ * @since @__version__@
  * @version @__version__@ &mdash; <em>$Date: 2014-01-14 $</em>
  */
+
+apply plugin: 'packaging'
  
-// The Jenetics projects.
-include 'org.jenetics'
-include 'org.jenetics.doc'
-include 'org.jenetics.dsl'
-include 'org.jenetics.example'
-
-rootProject.name = 'jenetics'
-
-// Rename the build scripts of the projects to ${project.name}.gradle
-rootProject.children.each {
-	it.buildFileName = it.name + '.gradle'
+dependencies {
+	compile Include.JScience
+	
+	testCompile Include.Apache.Commons.Math
+	testCompile Include.TestNG
 }
 
+jar.manifest.instruction('Export-Package',
+	'org.jenetics.dsl'
+)
+
+packaging {
+	name = 'Jenetics DSL'
+	author = 'Franz Wilhelmstötter'
+	url = 'http://jenetics.sourceforge.net'
+}
 
