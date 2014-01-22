@@ -66,7 +66,7 @@ import org.jenetics.util.Verifiable;
  *
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
  * @since 1.0
- * @version 1.0 &mdash; <em>$Date: 2013-11-28 $</em>
+ * @version 1.0 &mdash; <em>$Date: 2014-01-22 $</em>
  */
 public final class Genotype<G extends Gene<?, G>>
 	implements
@@ -311,7 +311,7 @@ public final class Genotype<G extends Gene<?, G>>
 	 * @param chromosomes The {@code Chromosome} array the {@code Genotype}
 	 *         consists of.
 	 * @throws NullPointerException if {@code chromosomes} is null or one of its
-	 *         element.
+	 *          element.
 	 * @throws IllegalArgumentException if {@code chromosome.length == 0}.
 	 */
 	@SafeVarargs
