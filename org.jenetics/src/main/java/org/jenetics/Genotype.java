@@ -19,8 +19,8 @@
  */
 package org.jenetics;
 
-import static org.jenetics.internal.util.object.Verify;
-import static org.jenetics.internal.util.object.eq;
+import static org.jenetics.internal.util.Equality.eq;
+import static org.jenetics.util.ISeq.toISeq;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -35,14 +35,14 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.jenetics.internal.util.HashBuilder;
-import org.jenetics.internal.util.cast;
+import org.jenetics.internal.util.Equality;
+import org.jenetics.internal.util.Hash;
 import org.jenetics.internal.util.jaxb;
+import org.jenetics.internal.util.reflect;
 
-import org.jenetics.util.Array;
 import org.jenetics.util.Factory;
-import org.jenetics.util.Function;
 import org.jenetics.util.ISeq;
+import org.jenetics.util.MSeq;
 import org.jenetics.util.Seq;
 import org.jenetics.util.Verifiable;
 
@@ -72,7 +72,7 @@ import org.jenetics.util.Verifiable;
  *
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
  * @since 1.0
- * @version 2.0 &mdash; <em>$Date: 2014-03-31 $</em>
+ * @version 3.0 &mdash; <em>$Date: 2014-11-04 $</em>
  */
 @XmlJavaTypeAdapter(Genotype.Model.Adapter.class)
 public final class Genotype<G extends Gene<?, G>>
@@ -98,7 +98,7 @@ public final class Genotype<G extends Gene<?, G>>
 			throw new IllegalArgumentException("No chromosomes given.");
 		}
 
-		_chromosomes = cast.apply(chromosomes);
+		_chromosomes = reflect.cast(chromosomes);
 		_ngenes = ngenes;
 	}
 
@@ -116,11 +116,9 @@ public final class Genotype<G extends Gene<?, G>>
 	}
 
 	private static int ngenes(final Seq<? extends Chromosome<?>> chromosomes) {
-		int ngenes = 0;
-		for (int i = chromosomes.length(); --i >= 0;) {
-			ngenes += chromosomes.get(i).length();
-		}
-		return ngenes;
+		return chromosomes.stream()
+			.mapToInt(c -> c.length())
+			.sum();
 	}
 
 	/**
@@ -173,6 +171,21 @@ public final class Genotype<G extends Gene<?, G>>
 		return _chromosomes.get(0).getGene();
 	}
 
+	/**
+	 * Return the gene from the given chromosome- and gene index. This is a
+	 * shortcut for {@code gt.getChromosome(chromosomeIndex).getGene(geneIndex)}.
+	 *
+	 * @since 3.0
+	 *
+	 * @param chromosomeIndex the chromosome index
+	 * @param geneIndex the gene index within the chromosome
+	 * @return the gene with the given indexes
+	 * @throws IndexOutOfBoundsException if the given indexes are not within the
+	 *         allowed range
+	 */
+	public G get(final int chromosomeIndex, final int geneIndex) {
+		return getChromosome(chromosomeIndex).getGene(geneIndex);
+	}
 
 	public ISeq<Chromosome<G>> toSeq() {
 		return _chromosomes;
@@ -211,7 +224,7 @@ public final class Genotype<G extends Gene<?, G>>
 	@Override
 	public boolean isValid() {
 		if (_valid == null) {
-			_valid = _chromosomes.forAll(Verify);
+			_valid = _chromosomes.forAll(Verifiable::isValid);
 		}
 		return _valid;
 	}
@@ -223,12 +236,7 @@ public final class Genotype<G extends Gene<?, G>>
 	 */
 	@Override
 	public Genotype<G> newInstance() {
-		final Array<Chromosome<G>> chromosomes = new Array<>(length());
-		for (int i = 0; i < length(); ++i) {
-			chromosomes.set(i, _chromosomes.get(i).newInstance());
-		}
-
-		return new Genotype<>(chromosomes.toISeq(), _ngenes);
+		return new Genotype<>(_chromosomes.map(Factory::newInstance), _ngenes);
 	}
 
 	Genotype<G> newInstance(final ISeq<Chromosome<G>> chromosomes) {
@@ -237,20 +245,14 @@ public final class Genotype<G extends Gene<?, G>>
 
 	@Override
 	public int hashCode() {
-		return HashBuilder.of(getClass()).and(_chromosomes).value();
+		return Hash.of(getClass()).and(_chromosomes).value();
 	}
 
 	@Override
-	public boolean equals(final Object o) {
-		if (o == this) {
-			return true;
-		}
-		if (!(o instanceof Genotype<?>)) {
-			return false;
-		}
-
-		final Genotype<?> gt = (Genotype<?>)o;
-		return eq(_chromosomes, gt._chromosomes);
+	public boolean equals(final Object obj) {
+		return Equality.of(this, obj).test(gt ->
+			eq(_chromosomes, gt._chromosomes)
+		);
 	}
 
 	@Override
@@ -258,68 +260,14 @@ public final class Genotype<G extends Gene<?, G>>
 		return _chromosomes.toString();
 	}
 
-
-	/* *************************************************************************
-	 *  Property access methods
-	 * ************************************************************************/
-
-	/**
-	 * Return a converter which access the chromosome array of this genotype.
-	 *
-	 * @param <T> the gene type
-	 * @return a function object which returns the chromosomes for this genotype.
-	 */
-	public static <T extends Gene<?, T>>
-	Function<Genotype<T>, ISeq<Chromosome<T>>> Chromosomes()
-	{
-		return new Function<Genotype<T>, ISeq<Chromosome<T>>>() {
-			@Override public ISeq<Chromosome<T>> apply(final Genotype<T> value) {
-				return value.toSeq();
-			}
-		};
-	}
-
-	/**
-	 * Return a converter which access the chromosome with the given index of
-	 * this genotype.
-	 *
-	 * @param <T> the gene type
-	 * @param index the index of the chromosome
-	 * @return a function object which returns the chromosome at the given index.
-	 */
-	public static <T extends Gene<?, T>>
-	Function<Genotype<T>, Chromosome<T>> Chromosome(final int index)
-	{
-		return new Function<Genotype<T>, Chromosome<T>>() {
-			@Override public Chromosome<T> apply(final Genotype<T> value) {
-				return value.getChromosome(index);
-			}
-		};
-	}
-
-	/**
-	 * Return a converter which access the first chromosome of this genotype.
-	 *
-	 * @param <T> the gene type
-	 * @return a function object which returns the first chromosome of this
-	 *         genotype.
-	 */
-	public static <T extends Gene<?, T>>
-	Function<Genotype<T>, Chromosome<T>> Chromosome()
-	{
-		return new Function<Genotype<T>, Chromosome<T>>() {
-			@Override public Chromosome<T> apply(final Genotype<T> value) {
-				return value.getChromosome();
-			}
-		};
-	}
-
 	/**
 	 * Create a new Genotype from a given array of {@code Chromosomes}.
 	 *
+	 * @since 3.0
+	 *
 	 * @param <G> the gene type
-	 * @param chromosomes The {@code Chromosome} array the {@code Genotype}
-	 *         consists of.
+	 * @param first the first {@code Chromosome} of the {@code Genotype}
+	 * @param rest the rest of the genotypes chromosomes.
 	 * @return a new {@code Genotype} from the given chromosomes
 	 * @throws NullPointerException if {@code chromosomes} is null or one of its
 	 *         element.
@@ -327,10 +275,18 @@ public final class Genotype<G extends Gene<?, G>>
 	 */
 	@SafeVarargs
 	public static <G extends Gene<?, G>> Genotype<G> of(
-		final Chromosome<G>... chromosomes
+		final Chromosome<G> first,
+		final Chromosome<G>... rest
 	) {
-		return new Genotype<>(Array.of(chromosomes).toISeq());
+		final MSeq<Chromosome<G>> seq = MSeq.ofLength(1 +  rest.length);
+		seq.set(0, first);
+		for (int i = 0; i < rest.length; ++i) {
+			seq.set(i + 1, rest[i]);
+		}
+		return new Genotype<>(seq.toISeq());
 	}
+
+
 
 	/* *************************************************************************
 	 *  JAXB object serialization
@@ -368,9 +324,9 @@ public final class Genotype<G extends Gene<?, G>>
 
 			@Override
 			public Genotype unmarshal(final Model model) throws Exception {
-				final ISeq chs = Array.of(model.chromosomes)
+				final ISeq chs = (ISeq)model.chromosomes.stream()
 					.map(jaxb.Unmarshaller(model.chromosomes.get(0)))
-					.toISeq();
+					.collect(toISeq());
 
 				return new Genotype(chs, model.ngenes);
 			}

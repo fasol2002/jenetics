@@ -20,10 +20,12 @@
 package org.jenetics;
 
 import static java.lang.String.format;
-import static org.jenetics.internal.util.object.eq;
+import static org.jenetics.internal.util.Equality.eq;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -35,14 +37,13 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.jenetics.internal.util.HashBuilder;
-import org.jenetics.internal.util.cast;
+import org.jenetics.internal.util.Equality;
+import org.jenetics.internal.util.Hash;
+import org.jenetics.internal.util.IntRef;
 import org.jenetics.internal.util.jaxb;
 import org.jenetics.internal.util.model.IndexedObject;
+import org.jenetics.internal.util.reflect;
 
-import org.jenetics.util.Array;
-import org.jenetics.util.Factory;
-import org.jenetics.util.Function;
 import org.jenetics.util.ISeq;
 import org.jenetics.util.RandomRegistry;
 
@@ -52,7 +53,7 @@ import org.jenetics.util.RandomRegistry;
  * problems in combination with the {@link PermutationChromosome}.
  * </p>
  * The following code shows how to create a combinatorial genotype factory which
- * can be used when creating an {@link GeneticAlgorithm} instance.
+ * can be used when creating an {@link org.jenetics.engine.Engine} instance.
  * [code]
  * final ISeq&lt;Integer&gt; alleles = Array.box(1, 2, 3, 4, 5, 6, 7, 8).toISeq();
  * final Factory&lt;Genotype&lt;EnumGene&lt;Integer&gt;&gt;&gt; gtf = Genotype.of(
@@ -74,7 +75,7 @@ import org.jenetics.util.RandomRegistry;
  *
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
  * @since 1.0
- * @version 2.0 &mdash; <em>$Date: 2014-04-12 $</em>
+ * @version 2.0 &mdash; <em>$Date: 2014-11-12 $</em>
  */
 @XmlJavaTypeAdapter(EnumGene.Model.Adapter.class)
 public final class EnumGene<A>
@@ -97,7 +98,7 @@ public final class EnumGene<A>
 	 *         sequence is empty
 	 * @throws NullPointerException if the valid alleles seq is {@code null}.
 	 */
-	public EnumGene(final int alleleIndex, final ISeq<? extends A> validAlleles) {
+	EnumGene(final int alleleIndex, final ISeq<? extends A> validAlleles) {
 		if (validAlleles.length() == 0) {
 			throw new IllegalArgumentException(
 				"Array of valid alleles must be greater than zero."
@@ -110,7 +111,7 @@ public final class EnumGene<A>
 			));
 		}
 
-		_validAlleles = cast.apply(validAlleles);
+		_validAlleles = reflect.cast(validAlleles);
 		_alleleIndex = alleleIndex;
 	}
 
@@ -178,23 +179,17 @@ public final class EnumGene<A>
 
 	@Override
 	public int hashCode() {
-		return HashBuilder.of(EnumGene.class)
+		return Hash.of(EnumGene.class)
 				.and(_alleleIndex)
 				.and(_validAlleles).value();
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (obj == null || getClass() != obj.getClass()) {
-			return false;
-		}
-
-		final EnumGene<?> pg = (EnumGene<?>)obj;
-		return eq(_alleleIndex, pg._alleleIndex) &&
-				eq(_validAlleles, pg._validAlleles);
+		return Equality.of(this, obj).test(pg ->
+			eq(_alleleIndex, pg._alleleIndex) &&
+			eq(_validAlleles, pg._validAlleles)
+		);
 	}
 
 	@Override
@@ -206,25 +201,9 @@ public final class EnumGene<A>
 	 *  Static object creation methods
 	 * ************************************************************************/
 
-	static <T> Function<Integer, EnumGene<T>> ToGene(
-		final ISeq<T> validAlleles
-	) {
-		return new Function<Integer, EnumGene<T>>() {
-			@Override
-			public EnumGene<T> apply(final Integer index) {
-				return new EnumGene<>(index, validAlleles);
-			}
-		};
-	}
-
-	static <T> Factory<EnumGene<T>> Gene(final ISeq<? extends T> validAlleles) {
-		return new Factory<EnumGene<T>>() {
-			private int _index = 0;
-			@Override
-			public EnumGene<T> newInstance() {
-				return new EnumGene<>(_index++, validAlleles);
-			}
-		};
+	static <T> Supplier<EnumGene<T>> Gene(final ISeq<? extends T> validAlleles) {
+		final IntRef index = new IntRef();
+		return () -> new EnumGene<>(index.value++, validAlleles);
 	}
 
 	/**
@@ -261,7 +240,7 @@ public final class EnumGene<A>
 		final int alleleIndex,
 		final A... validAlleles
 	) {
-		return new EnumGene<>(alleleIndex, Array.of(validAlleles).toISeq());
+		return new EnumGene<>(alleleIndex, ISeq.of(validAlleles));
 	}
 
 	/**
@@ -276,7 +255,7 @@ public final class EnumGene<A>
 	 */
 	@SafeVarargs
 	public static <A> EnumGene<A> of(final A... validAlleles) {
-		return EnumGene.of(Array.of(validAlleles).toISeq());
+		return EnumGene.of(ISeq.of(validAlleles));
 	}
 
 	/* *************************************************************************
@@ -320,9 +299,8 @@ public final class EnumGene<A>
 			public EnumGene unmarshal(final Model m) {
 				return new EnumGene<>(
 					m.allele.index,
-					Array.of(m.alleles)
+					ISeq.of(m.alleles)
 						.map(jaxb.Unmarshaller(m.allele.value))
-						.toISeq()
 				);
 			}
 
