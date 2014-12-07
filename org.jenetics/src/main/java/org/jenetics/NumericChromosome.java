@@ -23,14 +23,14 @@ package org.jenetics;
  * Numeric chromosome interface.
  *
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @version 1.6 &mdash; <em>$Date: 2014-04-16 $</em>
  * @since 1.6
+ * @version 3.0 &mdash; <em>$Date: 2014-12-07 $</em>
  */
 public interface NumericChromosome<
 	N extends Number & Comparable<? super N>,
 	G extends NumericGene<N, G>
 >
-	extends Chromosome<G>
+	extends BoundedChromosome<N, G>
 {
 
 	/**
