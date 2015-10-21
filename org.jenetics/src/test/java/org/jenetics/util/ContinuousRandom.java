@@ -19,34 +19,24 @@
  */
 package org.jenetics.util;
 
-import java.util.stream.Stream;
-
 /**
- * @param <T> the object type this factory creates.
- *
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @since 1.0
- * @version 3.0
  */
-@FunctionalInterface
-public interface Factory<T> {
+public class ContinuousRandom extends Random64 {
 
-	/**
-	 * Create a new instance of type T.
-	 *
-	 * @return a new instance of type T
-	 */
-	public T newInstance();
+	private long _next;
 
-	/**
-	 * Return a new stream of object instances, created by this factory.
-	 *
-	 * @since 3.0
-	 *
-	 * @return a stream of objects, created by this factory
-	 */
-	public default Stream<T> instances() {
-		return Stream.generate(this::newInstance);
+	public ContinuousRandom(final long start) {
+		_next = start;
 	}
 
+	@Override
+	public long nextLong() {
+		return _next++;
+	}
+
+	@Override
+	public int nextInt() {
+		return (int)nextLong();
+	}
 }

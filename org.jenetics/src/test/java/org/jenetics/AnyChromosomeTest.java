@@ -17,36 +17,28 @@
  * Author:
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
-package org.jenetics.util;
+package org.jenetics;
 
-import java.util.stream.Stream;
+import org.testng.annotations.Test;
+
+import org.jenetics.util.Factory;
+import org.jenetics.util.RandomRegistry;
 
 /**
- * @param <T> the object type this factory creates.
- *
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @since 1.0
- * @version 3.0
  */
-@FunctionalInterface
-public interface Factory<T> {
+@Test
+public class AnyChromosomeTest extends ChromosomeTester<AnyGene<Integer>> {
 
-	/**
-	 * Create a new instance of type T.
-	 *
-	 * @return a new instance of type T
-	 */
-	public T newInstance();
+	@Override
+	protected Factory<Chromosome<AnyGene<Integer>>> factory() {
+		return () -> AnyChromosome.of(RandomRegistry.getRandom()::nextInt, 10);
+	}
 
-	/**
-	 * Return a new stream of object instances, created by this factory.
-	 *
-	 * @since 3.0
-	 *
-	 * @return a stream of objects, created by this factory
-	 */
-	public default Stream<T> instances() {
-		return Stream.generate(this::newInstance);
+	@Override
+	public void objectSerialize() {
+		// Ignore the serialization test. The 'AnyChromosome' shouldn't be
+		// Serializable, but the 'AbstractChromosome' is. Will be removed.
 	}
 
 }

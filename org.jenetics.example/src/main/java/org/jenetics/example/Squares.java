@@ -17,46 +17,42 @@
  * Author:
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
-package org.jenetics.engine;
+package org.jenetics.example;
 
-import java.util.concurrent.ForkJoinPool;
-import java.util.stream.IntStream;
+import java.awt.Dimension;
+import java.util.Random;
 
-import org.jenetics.DoubleChromosome;
-import org.jenetics.DoubleGene;
-import org.jenetics.Genotype;
+import org.jenetics.AnyGene;
+import org.jenetics.Phenotype;
+import org.jenetics.engine.Engine;
+import org.jenetics.engine.EvolutionResult;
+import org.jenetics.engine.codecs;
+import org.jenetics.util.RandomRegistry;
 
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
  */
-public class EngineExecutorTest {
+public class Squares {
 
-	private static double f(final Genotype<DoubleGene> gt) {
-		return IntStream.range(0, 50000)
-			.mapToDouble(Math::sinh)
-			.sum()*gt.getGene().getAllele();
+	private static Dimension nextDimension() {
+		final Random random = RandomRegistry.getRandom();
+		return new Dimension(random.nextInt(100), random.nextInt(100));
+	}
+
+	private static double area(final Dimension dim) {
+		return dim.getHeight()*dim.getWidth();
 	}
 
 	public static void main(final String[] args) {
-		//final ExecutorService executor = Executors.newFixedThreadPool(2);
-
-		final Engine<DoubleGene, Double> engine = Engine
-			.builder(EngineExecutorTest::f, DoubleChromosome.of(0, 1))
-			.executor(new ForkJoinPool(10))
+		final Engine<AnyGene<Dimension>, Double> engine = Engine
+			.builder(Squares::area, codecs.ofScalar(Squares::nextDimension))
 			.build();
 
-		for (int i = 0; i < 1000; ++i) {
-			final Double result = engine.stream()
-				.limit(100)
-				.collect(EvolutionResult.toBestGenotype())
-				.getGene().getAllele();
+		final Phenotype<AnyGene<Dimension>, Double> pt = engine.stream()
+			.limit(50)
+			.collect(EvolutionResult.toBestPhenotype());
 
-			System.out.println("Gen: " + i + ": " + result);
-		}
-
-		//executor.shutdown();
-		System.out.println("READY");
+		System.out.println(pt);
 	}
-
 
 }
