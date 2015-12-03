@@ -17,50 +17,30 @@
  * Author:
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
+package org.jenetics.akka;
+
+import akka.actor.UntypedActor;
+
+import org.jenetics.Population;
 
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @since !__version__!
  * @version !__version__!
+ * @since !__version__!
  */
+public final class EvaluationActor extends UntypedActor {
 
-plugins {
-	id "me.champeau.gradle.jmh" version "0.1.2"
-}
-
-apply plugin: 'packaging'
-apply plugin: 'nexus'
-
-dependencies {
-	compile project(':org.jenetics')
-	compile Include.Akka.Actor
-
-	testCompile Include.Apache.Commons.Math
-	testCompile Include.TestNG
-	testCompile Include.Akka.TestKit
-
-	jmh Include.JMH.Core
-	jmh Include.JMH.Processor
-	jmh files('build/classes/main')
-}
-
-jmhJar {
-	appendix = 'jmh'
-}
-
-jar.manifest.instruction('Export-Package',
-	'org.jenetics.random'
-)
-
-packaging {
-	name = 'Jenetics Akka'
-	author = 'Franz Wilhelmstötter'
-	url = 'http://jenetics.io'
-}
-
-idea {
-	module{
-		scopes.COMPILE.plus += [configurations.jmh]
+	@Override
+	public void onReceive(final Object message) {
+		if (message instanceof Population<?, ?>) {
+			final Population<?, ?> population = (Population<?, ?>)message;
+			population.forEach(pt -> {
+				getContext().actorOf(ExecutionActor.props())
+					.tell(pt, getSelf());
+			});
+		} else {
+			unhandled(message);
+		}
 	}
-}
 
+}

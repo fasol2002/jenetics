@@ -17,50 +17,41 @@
  * Author:
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
+package org.jenetics.akka;
+
+import static java.util.Objects.requireNonNull;
+
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @since !__version__!
  * @version !__version__!
+ * @since !__version__!
  */
+final class ValueMatcher<T> {
 
-plugins {
-	id "me.champeau.gradle.jmh" version "0.1.2"
-}
+	private final Class<?> _type;
 
-apply plugin: 'packaging'
-apply plugin: 'nexus'
-
-dependencies {
-	compile project(':org.jenetics')
-	compile Include.Akka.Actor
-
-	testCompile Include.Apache.Commons.Math
-	testCompile Include.TestNG
-	testCompile Include.Akka.TestKit
-
-	jmh Include.JMH.Core
-	jmh Include.JMH.Processor
-	jmh files('build/classes/main')
-}
-
-jmhJar {
-	appendix = 'jmh'
-}
-
-jar.manifest.instruction('Export-Package',
-	'org.jenetics.random'
-)
-
-packaging {
-	name = 'Jenetics Akka'
-	author = 'Franz Wilhelmstötter'
-	url = 'http://jenetics.io'
-}
-
-idea {
-	module{
-		scopes.COMPILE.plus += [configurations.jmh]
+	private ValueMatcher(final Class<?> type) {
+		_type = requireNonNull(type);
 	}
-}
 
+	@SuppressWarnings("unchecked")
+	public void handle(final Object message, final Consumer<T> consumer) {
+		final Optional<T> value = Optional.ofNullable(message)
+			.filter(v -> v.getClass() == _type)
+			.map(v -> (T)_type.cast(v));
+
+		if (value.isPresent()) {
+
+		}
+	}
+
+	public static <T> ValueMatcher<T> of(final Class<?> type) {
+		return new ValueMatcher<>(type);
+	}
+
+
+
+}
