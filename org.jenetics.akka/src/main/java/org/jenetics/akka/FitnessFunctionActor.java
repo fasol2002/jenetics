@@ -17,24 +17,29 @@
  * Author:
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
+package org.jenetics.akka;
+
+import akka.actor.Props;
+import akka.actor.UntypedActor;
 
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @since 1.2
- * @version 1.4
+ * @version !__version__!
+ * @since !__version__!
  */
+public class FitnessFunctionActor extends UntypedActor {
 
-// The Jenetics projects.
-include 'org.jenetics'
-include 'org.jenetics.akka'
-include 'org.jenetics.example'
-include 'org.jenetics.doc'
+	@Override
+	public void onReceive(final Object message) throws Exception {
+		if (message instanceof String) {
 
-rootProject.name = 'jenetics'
+		} else {
+			unhandled(message);
+		}
+	}
 
-// Rename the build scripts of the projects to ${project.name}.gradle
-rootProject.children.each {
-	it.buildFileName = it.name + '.gradle'
+	public static Props props(final int magicNumber) {
+		return Props.create(() -> new FitnessFunctionActor());
+	}
+
 }
-
-

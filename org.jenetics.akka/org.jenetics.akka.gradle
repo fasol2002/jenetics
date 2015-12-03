@@ -20,21 +20,46 @@
 
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @since 1.2
- * @version 1.4
+ * @since !__version__!
+ * @version !__version__!
  */
 
-// The Jenetics projects.
-include 'org.jenetics'
-include 'org.jenetics.akka'
-include 'org.jenetics.example'
-include 'org.jenetics.doc'
-
-rootProject.name = 'jenetics'
-
-// Rename the build scripts of the projects to ${project.name}.gradle
-rootProject.children.each {
-	it.buildFileName = it.name + '.gradle'
+plugins {
+	id "me.champeau.gradle.jmh" version "0.1.2"
 }
 
+apply plugin: 'packaging'
+apply plugin: 'nexus'
+
+dependencies {
+	compile project(':org.jenetics')
+	compile Include.Akka.Actor
+
+	testCompile Include.Apache.Commons.Math
+	testCompile Include.TestNG
+
+	jmh Include.JMH.Core
+	jmh Include.JMH.Processor
+	jmh files('build/classes/main')
+}
+
+jmhJar {
+	appendix = 'jmh'
+}
+
+jar.manifest.instruction('Export-Package',
+	'org.jenetics.random'
+)
+
+packaging {
+	name = 'Jenetics Akka'
+	author = 'Franz Wilhelmstötter'
+	url = 'http://jenetics.io'
+}
+
+idea {
+	module{
+		scopes.COMPILE.plus += [configurations.jmh]
+	}
+}
 
