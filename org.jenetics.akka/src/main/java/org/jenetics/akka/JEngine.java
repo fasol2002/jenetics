@@ -24,5 +24,5 @@ package org.jenetics.akka;
  * @version !__version__!
  * @since !__version__!
  */
-public class Engine {
+public class JEngine {
 }

@@ -27,7 +27,7 @@ import akka.actor.UntypedActor;
  * @version !__version__!
  * @since !__version__!
  */
-public class FitnessFunctionActor extends UntypedActor {
+public class JFitnessFunctionActor extends UntypedActor {
 
 	@Override
 	public void onReceive(final Object message) throws Exception {
@@ -39,7 +39,7 @@ public class FitnessFunctionActor extends UntypedActor {
 	}
 
 	public static Props props(final int magicNumber) {
-		return Props.create(() -> new FitnessFunctionActor());
+		return Props.create(() -> new JFitnessFunctionActor());
 	}
 
 }

@@ -19,28 +19,54 @@
  */
 package org.jenetics.akka;
 
+import static java.util.Objects.requireNonNull;
+
+import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-import org.jenetics.Population;
+import java.util.List;
 
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
  * @version !__version__!
  * @since !__version__!
  */
-public final class EvaluationActor extends UntypedActor {
+public final class JExecutionActor extends UntypedActor {
+
+	public static final class Message {
+		private final List<Runnable> _runnables;
+
+		private Message(final List<Runnable> runnables) {
+			_runnables = requireNonNull(runnables);
+		}
+
+		public List<Runnable> getRunnables() {
+			return _runnables;
+		}
+
+		public static Message of(final List<Runnable> runnables) {
+			return new Message(runnables);
+		}
+	}
 
 	@Override
 	public void onReceive(final Object message) {
-		if (message instanceof Population<?, ?>) {
-			final Population<?, ?> population = (Population<?, ?>)message;
-			population.forEach(pt -> {
-				getContext().actorOf(ExecutionActor.props())
-					.tell(pt, getSelf());
-			});
+		if (message instanceof Message) {
+			final Message msg = (Message)message;
+
+			final long start = System.nanoTime();
+			msg.getRunnables().forEach(Runnable::run);
+			final long end = System.nanoTime();
+
+			getSender().tell(end - start, getSelf());
+			getContext().stop(getSelf());
 		} else {
 			unhandled(message);
 		}
+	}
+
+	public static Props props() {
+		return Props.create(JExecutionActor::new);
 	}
 
 }
