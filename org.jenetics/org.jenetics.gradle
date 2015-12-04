@@ -30,6 +30,7 @@ plugins {
 
 apply plugin: 'packaging'
 apply plugin: 'nexus'
+apply plugin: 'idea'
 
 repositories {
 	mavenCentral()

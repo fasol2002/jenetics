@@ -24,28 +24,20 @@
  * @version !__version__!
  */
 
-plugins {
-	id "me.champeau.gradle.jmh" version "0.1.2"
-}
-
 apply plugin: 'packaging'
 apply plugin: 'nexus'
 
 dependencies {
 	compile project(':org.jenetics')
+	compile 'org.scala-lang:scala-library:2.11.7'
 	compile Include.Akka.Actor
 
+	testCompile 'org.scalatest:scalatest_2.11:2.2.4'
 	testCompile Include.Apache.Commons.Math
 	testCompile Include.TestNG
 	testCompile Include.Akka.TestKit
 
-	jmh Include.JMH.Core
-	jmh Include.JMH.Processor
-	jmh files('build/classes/main')
-}
-
-jmhJar {
-	appendix = 'jmh'
+	testRuntime 'org.scalatest:scalatest_2.11:2.2.4'
 }
 
 jar.manifest.instruction('Export-Package',
@@ -57,10 +49,3 @@ packaging {
 	author = 'Franz Wilhelmstötter'
 	url = 'http://jenetics.io'
 }
-
-idea {
-	module{
-		scopes.COMPILE.plus += [configurations.jmh]
-	}
-}
-
