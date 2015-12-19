@@ -26,7 +26,7 @@ import java.io.Serializable;
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
  * @since 3.0
- * @version !__version__!
+ * @version 3.4
  */
 public final class CharStore implements Array.Store<Character>, Serializable {
 	private static final long serialVersionUID = 1L;
@@ -56,6 +56,11 @@ public final class CharStore implements Array.Store<Character>, Serializable {
 		final char[] array = new char[until - from];
 		System.arraycopy(this.array, from, array, 0, until - from);
 		return new CharStore(array);
+	}
+
+	@Override
+	public CharStore newInstance(final int length) {
+		return new CharStore(length);
 	}
 
 	@Override

@@ -19,6 +19,7 @@
  */
 package org.jenetics.internal.collection;
 
+import static java.util.Arrays.copyOfRange;
 import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
@@ -27,8 +28,8 @@ import org.jenetics.internal.collection.Array.Store;
 
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @version !__version__!
- * @since !__version__!
+ * @version 3.4
+ * @since 3.4
  */
 public final class ObjectStore<T> implements Store<T>, Serializable {
 
@@ -53,9 +54,12 @@ public final class ObjectStore<T> implements Store<T>, Serializable {
 
 	@Override
 	public ObjectStore<T> copy(final int from, final int until) {
-		final Object[] array = new Object[until - from];
-		System.arraycopy(_array, from, array, 0, until - from);
-		return new ObjectStore<>(array);
+		return new ObjectStore<>(copyOfRange(_array, from, until));
+	}
+
+	@Override
+	public ObjectStore<T> newInstance(final int length) {
+		return ofLength(length);
 	}
 
 	@Override

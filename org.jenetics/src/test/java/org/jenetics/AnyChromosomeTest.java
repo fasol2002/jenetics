@@ -17,25 +17,28 @@
  * Author:
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
-package org.jenetics.internal.collection;
+package org.jenetics;
+
+import org.testng.annotations.Test;
+
+import org.jenetics.util.Factory;
+import org.jenetics.util.RandomRegistry;
 
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @since 1.4
- * @version !__version__!
  */
-public class ArrayMList<T> extends ArrayList<T> {
-	private static final long serialVersionUID = 1L;
+@Test
+public class AnyChromosomeTest extends ChromosomeTester<AnyGene<Integer>> {
 
-	public ArrayMList(final Array<T> array) {
-		super(array);
+	@Override
+	protected Factory<Chromosome<AnyGene<Integer>>> factory() {
+		return () -> AnyChromosome.of(RandomRegistry.getRandom()::nextInt, 10);
 	}
 
 	@Override
-	public T set(final int index, final T element) {
-		final T oldElement = array.get(index);
-		array.set(index, element);
-		return oldElement;
+	public void objectSerialize() {
+		// Ignore the serialization test. The 'AnyChromosome' shouldn't be
+		// Serializable, but the 'AbstractChromosome' is. Will be removed.
 	}
 
 }

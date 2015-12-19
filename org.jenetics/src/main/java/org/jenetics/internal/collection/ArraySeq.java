@@ -23,7 +23,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
 import java.util.Iterator;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -36,7 +35,7 @@ import org.jenetics.util.Seq;
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
  * @since 1.4
- * @version !__version__!
+ * @version 3.4
  */
 public abstract class ArraySeq<T>
 	implements
@@ -55,6 +54,32 @@ public abstract class ArraySeq<T>
 	public final T get(final int index) {
 		array.checkIndex(index);
 		return array.get(index);
+	}
+
+	@SuppressWarnings("unchecked")
+	final Array<T> __append(final Iterable<? extends T> values) {
+		requireNonNull(values);
+		return values instanceof ArraySeq<?>
+			? array.append(((ArraySeq<T>)values).array)
+			: array.append(values);
+	}
+
+	@SuppressWarnings("unchecked")
+	final Array<T> __prepend(final Iterable<? extends T> values) {
+		requireNonNull(values);
+		return values instanceof ArraySeq<?>
+			? ((ArraySeq<T>)values).array.append(array)
+			: array.prepend(values);
+	}
+
+	@Override
+	public Iterator<T> iterator() {
+		return listIterator();
+	}
+
+	@Override
+	public ListIterator<T> listIterator() {
+		return new ArrayIterator<>(array);
 	}
 
 	@Override
@@ -135,30 +160,6 @@ public abstract class ArraySeq<T>
 	@Override
 	public int length() {
 		return array.length();
-	}
-
-	@Override
-	public Iterator<T> iterator() {
-		return new ArrayIterator<>(array);
-	}
-
-	public ListIterator<T> listIterator() {
-		return new ArrayIterator<>(array);
-	}
-
-	@Override
-	public List<T> asList() {
-		return new ArrayList<>(array);
-	}
-
-	@Override
-	public Object[] toArray() {
-		return asList().toArray();
-	}
-
-	@Override
-	public T[] toArray(final T[] array) {
-		return asList().toArray(array);
 	}
 
 	@Override

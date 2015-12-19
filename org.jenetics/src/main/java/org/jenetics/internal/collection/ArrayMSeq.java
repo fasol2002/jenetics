@@ -23,7 +23,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
 import java.util.function.Function;
@@ -35,10 +34,9 @@ import org.jenetics.util.MSeq;
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
  * @since 1.4
- * @version !__version__!
+ * @version 3.4
  */
 public class ArrayMSeq<T> extends ArraySeq<T> implements MSeq<T> {
-
 	private static final long serialVersionUID = 1L;
 
 	public ArrayMSeq(final Array<T> array) {
@@ -47,12 +45,14 @@ public class ArrayMSeq<T> extends ArraySeq<T> implements MSeq<T> {
 
 	@Override
 	public MSeq<T> copy() {
-		return new ArrayMSeq<>(array.copy());
+		return isEmpty()
+			? this
+			: new ArrayMSeq<>(array.copy());
 	}
 
 	@Override
 	public Iterator<T> iterator() {
-		return new ArrayMIterator<>(array);
+		return listIterator();
 	}
 
 	@Override
@@ -137,12 +137,33 @@ public class ArrayMSeq<T> extends ArraySeq<T> implements MSeq<T> {
 
 	@Override
 	public MSeq<T> subSeq(final int start, final int end) {
-		return new ArrayMSeq<>(array.slice(start, end));
+		if (start > end) {
+			throw new ArrayIndexOutOfBoundsException(format(
+				"start[%d] > end[%d]", start, end
+			));
+		}
+		if (start < 0 || end > length()) {
+			throw new ArrayIndexOutOfBoundsException(format(
+				"Indexes (%d, %d) range: [%d..%d)", start, end, 0, length()
+			));
+		}
+
+		return start == end
+			? Empty.mseq()
+			: new ArrayMSeq<>(array.slice(start, end));
 	}
 
 	@Override
 	public MSeq<T> subSeq(final int start) {
-		return new ArrayMSeq<>(array.slice(start, length()));
+		if (start < 0 || start > length()) {
+			throw new ArrayIndexOutOfBoundsException(format(
+				"Index %d range: [%d..%d)", start, 0, length()
+			));
+		}
+
+		return start == length()
+			? Empty.mseq()
+			: new ArrayMSeq<>(array.slice(start, length()));
 	}
 
 	@Override
@@ -155,13 +176,20 @@ public class ArrayMSeq<T> extends ArraySeq<T> implements MSeq<T> {
 	}
 
 	@Override
-	public ISeq<T> toISeq() {
-		return new ArrayISeq<>(array.seal());
+	public MSeq<T> append(final Iterable<? extends T> values) {
+		return new ArrayMSeq<>(__append(values));
 	}
 
 	@Override
-	public List<T> asList() {
-		return new ArrayMList<>(array);
+	public MSeq<T> prepend(final Iterable<? extends T> values) {
+		return new ArrayMSeq<>(__prepend(values));
+	}
+
+	@Override
+	public ISeq<T> toISeq() {
+		return isEmpty()
+			? Empty.iseq()
+			: new ArrayISeq<>(array.seal());
 	}
 
 }

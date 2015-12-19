@@ -23,6 +23,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Array implementation class. This class manages the actual array (store) and
@@ -30,8 +32,8 @@ import java.io.Serializable;
  *
  * @param <T> the array element type
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
- * @version !__version__!
- * @since !__version__!
+ * @version 3.4
+ * @since 3.4
  */
 public final class Array<T> implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -114,6 +116,101 @@ public final class Array<T> implements Serializable {
 	 */
 	public T get(final int index) {
 		return _store.get(index + _start);
+	}
+
+	/**
+	 * Return a <i>new</i> {@code Array} object with the given values appended.
+	 *
+	 * @since 3.4
+	 *
+	 * @param array the values to append
+	 * @return a <i>new</i> {@code Array} object with the elements of
+	 *         {@code this} array and the given {@code array} appended.
+	 * @throws NullPointerException if the given {@code array} is {@code null}
+	 */
+	public Array<T> append(final Array<T> array) {
+		final Array<T> appended = newInstance(length() + array.length());
+		for (int i = 0; i < _length; ++i) {
+			appended.set(i, get(i));
+		}
+		for (int i = 0; i < array._length; ++i) {
+			appended.set(i + _length, array.get(i));
+		}
+
+		return appended;
+	}
+
+	private Array<T> newInstance(final int length) {
+		return of(_store._value.newInstance(length));
+	}
+
+	/**
+	 * Return a <i>new</i> {@code Array} with the given {@code values} appended.
+	 *
+	 * @since 3.4
+	 *
+	 * @param values the values to append
+	 * @return a <i>new</i> {@code Array} with the elements of {@code this}
+	 *        array and the given {@code values} appended.
+	 * @throws NullPointerException if the given {@code values} iterable is
+	 *         {@code null}
+	 */
+	public Array<T> append(final Iterable<? extends T> values) {
+		final int size = size(values);
+		final Array<T> array = newInstance(_length + size);
+
+		for (int i = 0; i < _length; ++i) {
+			array.set(i, get(i));
+		}
+
+		final Iterator<? extends T> it = values.iterator();
+		for (int i = 0; i < size; ++i) {
+			array.set(_length + i, it.next());
+		}
+
+		return array;
+	}
+
+	/**
+	 * Return a <i>new</i> {@code Array} with the given {@code values} prepended.
+	 *
+	 * @since 3.4
+	 *
+	 * @param values the values to prepend
+	 * @return a <i>new</i> {@code Array} with the elements of {@code this}
+	 *        array and the given {@code values} appended.
+	 * @throws NullPointerException if the given {@code values} iterable is
+	 *         {@code null}
+	 */
+	public Array<T> prepend(final Iterable<? extends T> values) {
+		final int size = size(values);
+		final Array<T> array = newInstance(_length + size);
+
+		final Iterator<? extends T> it = values.iterator();
+		for (int i = 0; i < size; ++i) {
+			array.set(i, it.next());
+		}
+
+		for (int i = 0; i < _length; ++i) {
+			array.set(size + i, get(i));
+		}
+
+		return array;
+	}
+
+	private static int size(final Iterable<?> values) {
+		int size = 0;
+		if (values instanceof Collection<?>) {
+			size = ((Collection<?>)values).size();
+		} else {
+			final Iterator<?> it = values.iterator();
+			while (it.hasNext()) {
+				++size;
+				it.next();
+			}
+		}
+
+		return size;
 	}
 
 	/**
@@ -224,8 +321,8 @@ public final class Array<T> implements Serializable {
 	 *
 	 * @param <T> the array element type
 	 * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
-	 * @version !__version__!
-	 * @since !__version__!
+	 * @version 3.4
+	 * @since 3.4
 	 */
 	public interface Store<T> {
 
@@ -245,6 +342,13 @@ public final class Array<T> implements Serializable {
 		 * @return the value at the given index
 		 */
 		public T get(final int index);
+
+		/**
+		 * Return the length of the array {@code Store}.
+		 *
+		 * @return the array store length
+		 */
+		public int length();
 
 		/**
 		 * Return a new array {@code Store} with the copied portion of the
@@ -277,20 +381,21 @@ public final class Array<T> implements Serializable {
 		}
 
 		/**
-		 * Return the length of the array {@code Store}.
+		 * Return a new {@code Store} of the same type and the given length.
 		 *
-		 * @return the array store length
+		 * @param length the length of the new store
+		 * @return a new {@code Store} of the same type and the given length.
+		 * @throws NegativeArraySizeException if the length is smaller than zero
 		 */
-		public int length();
-
+		public Store<T> newInstance(final int length);
 
 		/**
 		 * Mutable reference of an underlying array {@code Store}.
 		 *
 		 * @param <T> the array element type
 		 * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
-		 * @version !__version__!
-		 * @since !__version__!
+		 * @version 3.4
+		 * @since 3.4
 		 */
 		public static final class Ref<T> implements Store<T>, Serializable {
 			private static final long serialVersionUID = 1L;
@@ -344,6 +449,11 @@ public final class Array<T> implements Serializable {
 			@Override
 			public Store<T> copy(final int from, final int until) {
 				return _value.copy(from, until);
+			}
+
+			@Override
+			public Store<T> newInstance(final int length) {
+				return _value.newInstance(length);
 			}
 
 			public static <T> Ref<T> of(final Store<T> value) {

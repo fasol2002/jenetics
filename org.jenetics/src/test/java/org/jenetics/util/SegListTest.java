@@ -17,7 +17,7 @@
  * Author:
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
-package org.jenetics.internal.collection;
+package org.jenetics.util;
 
 import java.util.List;
 import java.util.Random;
@@ -30,12 +30,12 @@ import org.jenetics.internal.math.random;
 /**
  * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
  */
-public class ArrayListTest {
+public class SegListTest {
 
 	@Test
 	public void size() {
-		final Array<Integer> proxy = Array.of(ObjectStore.ofLength(1000));
-		final List<Integer> list = new ArrayList<>(proxy);
+		final MSeq<Integer> proxy = MSeq.ofLength(1000);
+		final List<Integer> list = new SeqList<>(proxy);
 
 		Assert.assertEquals(list.size(), proxy.length());
 	}
@@ -45,12 +45,12 @@ public class ArrayListTest {
 		final long seed = random.seed();
 		final Random random = new Random(seed);
 
-		final Array<Integer> proxy = Array.of(ObjectStore.ofLength(1000));
+		final MSeq<Integer> proxy = MSeq.ofLength(1000);
 		for (int i = 0; i < proxy.length(); ++i) {
 			proxy.set(i, random.nextInt());
 		}
 
-		final List<Integer> list = new ArrayList<>(proxy);
+		final List<Integer> list = new SeqList<>(proxy);
 
 		for (int i = 0; i < proxy.length(); ++i) {
 			final Integer actual = list.get(i);
@@ -61,15 +61,15 @@ public class ArrayListTest {
 
 	@Test
 	public void sliceGet() {
-		final Array<Integer> proxy = Array.of(ObjectStore.ofLength(1000));
+		final MSeq<Integer> proxy = MSeq.ofLength(1000);
 		for (int i = 0; i < proxy.length(); ++i) {
 			proxy.set(i, i);
 		}
 
 		final int sliceStart = 50;
 		final int sliceEnd = 500;
-		final Array<Integer> slice = proxy.slice(sliceStart, sliceEnd);
-		final List<Integer> list = new ArrayList<>(slice);
+		final MSeq<Integer> slice = proxy.subSeq(sliceStart, sliceEnd);
+		final List<Integer> list = new SeqList<>(slice);
 
 		for (int i = 0; i < list.size(); ++i) {
 			Assert.assertEquals(slice.get(i), Integer.valueOf(i + sliceStart));
@@ -78,8 +78,8 @@ public class ArrayListTest {
 
 	@Test(expectedExceptions = UnsupportedOperationException.class)
 	public void set() {
-		final Array<Integer> proxy = Array.of(ObjectStore.ofLength(1000));
-		final List<Integer> list = new ArrayList<>(proxy);
+		final MSeq<Integer> proxy = MSeq.ofLength(1000);
+		final List<Integer> list = new SeqList<>(proxy);
 
 		list.set(34, 23);
 	}
@@ -89,12 +89,12 @@ public class ArrayListTest {
 		long seed = 12341234;
 		final Random random = new Random(seed);
 
-		final Array<Long> proxy = Array.of(ObjectStore.ofLength(1000));
+		final MSeq<Long> proxy = MSeq.ofLength(1000);
 		for (int i = 0; i < proxy.length(); ++i) {
 			proxy.set(i, random.nextLong());
 		}
 
-		final List<Long> list = new ArrayList<>(proxy);
+		final List<Long> list = new SeqList<>(proxy);
 
 		random.setSeed(seed);
 		for (int i = 0; i < proxy.length(); ++i) {
@@ -108,12 +108,12 @@ public class ArrayListTest {
 		long seed = 12341234;
 		final Random random = new Random(seed);
 
-		final Array<Long> proxy = Array.of(ObjectStore.ofLength(1000));
+		final MSeq<Long> proxy = MSeq.ofLength(1000);
 		for (int i = 0; i < proxy.length(); ++i) {
 			proxy.set(i, random.nextLong());
 		}
 
-		final List<Long> list = new ArrayList<>(proxy);
+		final List<Long> list = new SeqList<>(proxy);
 
 		random.setSeed(seed);
 		for (int i = 0; i < proxy.length(); ++i) {
@@ -124,15 +124,15 @@ public class ArrayListTest {
 
 	@Test
 	public void sliceIndexOf() {
-		final Array<Integer> proxy = Array.of(ObjectStore.ofLength(1000));
+		final MSeq<Integer> proxy = MSeq.ofLength(1000);
 		for (int i = 0; i < proxy.length(); ++i) {
 			proxy.set(i, i);
 		}
 
 		final int sliceStart = 50;
 		final int sliceEnd = 500;
-		final Array<Integer> slice = proxy.slice(sliceStart, sliceEnd);
-		final List<Integer> list = new ArrayList<>(slice);
+		final MSeq<Integer> slice = proxy.subSeq(sliceStart, sliceEnd);
+		final List<Integer> list = new SeqList<>(slice);
 
 		for (int i = 0; i < list.size(); ++i) {
 			final int index = list.indexOf(sliceStart + i);
@@ -142,15 +142,15 @@ public class ArrayListTest {
 
 	@Test
 	public void sliceLastIndexOf() {
-		final Array<Integer> proxy = Array.of(ObjectStore.ofLength(1000));
+		final MSeq<Integer> proxy = MSeq.ofLength(1000);
 		for (int i = 0; i < proxy.length(); ++i) {
 			proxy.set(i, i);
 		}
 
 		final int sliceStart = 50;
 		final int sliceEnd = 500;
-		final Array<Integer> slice = proxy.slice(sliceStart, sliceEnd);
-		final List<Integer> list = new ArrayList<>(slice);
+		final MSeq<Integer> slice = proxy.subSeq(sliceStart, sliceEnd);
+		final List<Integer> list = new SeqList<>(slice);
 
 		for (int i = 0; i < list.size(); ++i) {
 			final int index = list.lastIndexOf(sliceStart + i);
@@ -163,12 +163,12 @@ public class ArrayListTest {
 		long seed = random.seed();
 		final Random random = new Random(seed);
 
-		final Array<Long> proxy = Array.of(ObjectStore.ofLength(1000));
+		final MSeq<Long> proxy = MSeq.ofLength(1000);
 		for (int i = 0; i < proxy.length(); ++i) {
 			proxy.set(i, random.nextLong());
 		}
 
-		final List<Long> list = new ArrayList<>(proxy);
+		final List<Long> list = new SeqList<>(proxy);
 
 		random.setSeed(seed);
 		for (int i = 0; i < proxy.length(); ++i) {
@@ -184,12 +184,12 @@ public class ArrayListTest {
 		long seed = random.seed();
 		final Random random = new Random(seed);
 
-		final Array<Long> proxy = Array.of(ObjectStore.ofLength(1000));
+		final MSeq<Long> proxy = MSeq.ofLength(1000);
 		for (int i = 0; i < proxy.length(); ++i) {
 			proxy.set(i, random.nextLong());
 		}
 
-		final List<Long> list = new ArrayList<>(proxy);
+		final List<Long> list = new SeqList<>(proxy);
 		final Object[] array = list.toArray();
 
 		for (int i = 0; i < array.length; ++i) {
@@ -202,12 +202,12 @@ public class ArrayListTest {
 		long seed = random.seed();
 		final Random random = new Random(seed);
 
-		final Array<Long> proxy = Array.of(ObjectStore.ofLength(1000));
+		final MSeq<Long> proxy = MSeq.ofLength(1000);
 		for (int i = 0; i < proxy.length(); ++i) {
 			proxy.set(i, random.nextLong());
 		}
 
-		final List<Long> list = new ArrayList<>(proxy);
+		final List<Long> list = new SeqList<>(proxy);
 		final Long[] array = list.toArray(new Long[0]);
 
 		for (int i = 0; i < array.length; ++i) {
